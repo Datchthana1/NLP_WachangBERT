@@ -24,7 +24,7 @@ NUM_LABELS = len(LABEL_COLS)
 
 f1 = evaluate.load("f1")
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, use_fast=False)
 model = AutoModelForSequenceClassification.from_pretrained(
     MODEL_NAME, 
     num_labels=NUM_LABELS,
@@ -35,7 +35,11 @@ def read_data(file_path: str) -> pd.DataFrame:
     return df
 
 def preprocess(text_dataset: pd.DataFrame) -> dict:
-    tokenized = tokenizer(text_dataset["body_text"], truncation=True, padding="max_length", max_length=128)
+    tokenized = tokenizer(
+        text_dataset["body_text"], 
+        truncation=True, 
+        padding="max_length", 
+        max_length=128)
     tokenized["labels"] = [
         [float(text_dataset[col][i]) for col in LABEL_COLS]
         for i in range(len(text_dataset["body_text"]))
@@ -45,7 +49,10 @@ def preprocess(text_dataset: pd.DataFrame) -> dict:
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     preds = (logits > 0).astype(int)
-    return f1.compute(predictions=preds.flatten(), references=labels.flatten(), average="micro")
+    return f1.compute(
+        predictions=preds.flatten(), 
+        references=labels.flatten(), 
+        average="micro")
 
 if __name__ == "__main__":
     ds = ds.map(preprocess, batched=True)
