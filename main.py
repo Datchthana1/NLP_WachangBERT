@@ -39,11 +39,36 @@ def preprocess(text_dataset: pd.DataFrame) -> dict:
         text_dataset["body_text"], 
         truncation=True, 
         padding="max_length", 
-        max_length=128)
+        max_length=128) 
+    ### มันจะเอาส่วนที่เป็นข้อความยาวๆ หรือเนื้อหาจากข่าวมาแปลงเป็น Tokens ([3, 412, 887, ..., 1, 1, 1]) ผลลัพธ์คือ 
+    # input: ["รัฐบาลประกาศ...", "นักเรียนออกมา..."]
+    # output tokenized:
+    # {
+    #   "input_ids":      [[3, 412, 887, ..., 1, 1, 1],   # 128 ตัวเลข
+    #                      [3, 991, 23,  ..., 1, 1, 1]],
+    #   "attention_mask": [[1, 1,   1,   ..., 0, 0, 0],   # 1=real, 0=padding
+    #                      [1, 1,   1,   ..., 0, 0, 0]]
+    # }
     tokenized["labels"] = [
         [float(text_dataset[col][i]) for col in LABEL_COLS]
         for i in range(len(text_dataset["body_text"]))
-    ]
+    ] #เพิ่ม Label ให้กับข้อมูลที่ถูกแปลงเป็น Tokens ไว้ก่อนหน้านี้ ตัวอย่าง
+    # input: 
+    # {
+    #   "input_ids":      [[3, 412, 887, ..., 1, 1, 1],   # 128 ตัวเลข
+    #                      [3, 991, 23,  ..., 1, 1, 1]],
+    #   "attention_mask": [[1, 1,   1,   ..., 0, 0, 0],   # 1=real, 0=padding
+    #                      [1, 1,   1,   ..., 0, 0, 0]]
+    # }
+    # Label:
+    # {
+    #   "input_ids":      [[3, 412, 887, ..., 1, 1, 1],   # 128 ตัวเลข
+    #                      [3, 991, 23,  ..., 1, 1, 1]],
+    #   "attention_mask": [[1, 1,   1,   ..., 0, 0, 0],   # 1=real, 0=padding
+    #                      [1, 1,   1,   ..., 0, 0, 0]],
+    #  "labels":        [[0.0, 1.0, 0.0, ..., 0.0],     # 12 ตัวเลข (0 หรือ 1)
+    #                    [1.0, 0.0, 0.0, ..., 0.0]]
+    # }
     return tokenized
 
 def compute_metrics(eval_pred):
@@ -57,7 +82,7 @@ def compute_metrics(eval_pred):
 if __name__ == "__main__":
     ds = ds.map(preprocess, batched=True)
     ds.set_format("torch", columns=["input_ids", "attention_mask", "labels"])
-
+    # tensor([3, 412, 887, 23, 2, 1, 1, ...])  ← torch.Tensor
     training_args = TrainingArguments(
         output_dir="./results",
         num_train_epochs=3,
