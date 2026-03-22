@@ -1,4 +1,4 @@
-# nlp_tuning
+# NLP_WachangBERT
 
 Fine-tuning [WangchanBERTa](https://huggingface.co/airesearch/wangchanberta-base-att-spm-uncased) สำหรับงาน **Multi-label Text Classification** ภาษาไทย โดยใช้ dataset [prachathai-67k](https://huggingface.co/datasets/PyThaiNLP/prachathai67k)
 
